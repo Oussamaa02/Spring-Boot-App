@@ -1,5 +1,6 @@
 package com.example.demo.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,11 +46,30 @@ public class SecurityConfiguration {
                         .addLogoutHandler(logoutHandler)
                         .logoutSuccessHandler(
                                 (request, response, authentication) ->
-                                SecurityContextHolder.clearContext()
+                                {
+                                    SecurityContextHolder.clearContext();
+                                    response.setStatus(HttpServletResponse.SC_OK);
+                                }
                         )
                 )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
         ;
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true); // Required for cookies
+        configuration.setExposedHeaders(List.of("Set-Cookie")); // Optional: Explicitly expose cookies
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
